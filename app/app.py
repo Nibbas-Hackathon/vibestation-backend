@@ -17,7 +17,7 @@ def audio_continuation(song_link, count):
     audio_files_links = []
     audio_files_links.append(song_link)
     for i in range(count):
-        contination_params = {"model_version": "melody", "input_audio": song_link, "continuation": True, "duration": 8, "continuation_start": 4, "continuation_end": 8}
+        contination_params = {"model_version": "melody", "input_audio": song_link, "continuation": True, "duration": 24, "continuation_start": 25, "continuation_end": 30}
         song_link = replicate.run("meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",input=contination_params)
         audio_files_links.append(song_link)
         print(song_link)
@@ -59,7 +59,7 @@ def fetch_song():
 def fetch_full_song():
     count = 1
     prompt = request.args.get('prompt')
-    params = {"model_version": "melody", "prompt": prompt, "duration": 8}
+    params = {"model_version": "melody", "prompt": prompt, "duration": 30}
     audio_files_links = []
     song_link = replicate.run(
     "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
@@ -77,7 +77,7 @@ def fetch_song_from_emotion():
     result = DeepFace.analyze(img_path, actions=["emotion"])
     emotion = result[0]["dominant_emotion"]
     prompt = emotion
-    params = {"model_version": "melody", "prompt": prompt, "duration": 8}
+    params = {"model_version": "melody", "prompt": prompt, "duration": 30}
     audio_files_links = []
     song_link = replicate.run(
     "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
