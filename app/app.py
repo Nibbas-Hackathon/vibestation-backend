@@ -9,9 +9,22 @@ from pydub import AudioSegment
 import io
 import time
 import random
+from pathlib import Path
 
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
+
+def generate_filename(file_type,name=""):
+    current_time = int(time.time())
+    rand_num = random.randint(1000,9999)
+    if file_type == "audio":
+        filename = str(current_time) + "_" + str(rand_num) + ".wav"
+    elif file_type == "image":
+        file_ext = name.split(".")[-1]
+        filename = str(current_time) + "_" + str(rand_num) + "." + file_ext
+    return filename
+
+
 
 def audio_continuation(song_link, count):
     audio_files_links = []
@@ -24,9 +37,7 @@ def audio_continuation(song_link, count):
     return audio_files_links
 
 def combine_audio_files(files_list):
-    current_time = int(time.time())
-    rand_num = random.randint(1000,9999)
-    audio_file_name = str(current_time) + "_" + str(rand_num) + ".wav"
+    audio_file_name = generate_filename("audio")
     combined_audio = AudioSegment.empty()
     for link in files_list:
         try:
@@ -38,7 +49,7 @@ def combine_audio_files(files_list):
                 print(f"Failed to download {link}. Status code: {response.status_code}")
         except Exception as e:
             print(f"Error while processing {link}: {str(e)}")
-    file_path = "G:\\vibestation\\vibestation-backend\\app\\audio\\" + audio_file_name
+    file_path = Path("app/audio/{}".format(audio_file_name))
     combined_audio.export(file_path, format="wav")
     return file_path
 
@@ -72,8 +83,9 @@ def fetch_full_song():
 def fetch_song_from_emotion():
     uploaded_img = request.files['uploaded-img']
     img_filename = secure_filename(uploaded_img.filename)
-    uploaded_img.save("G:\\vibestation\\vibestation-backend\\app\img\\" + img_filename)
-    img_path = "G:\\vibestation\\vibestation-backend\\app\img\\" + img_filename
+    img_filename = generate_filename("image",img_filename)
+    img_path = Path("app/img,{}".format(img_filename))
+    uploaded_img.save(img_path)
     result = DeepFace.analyze(img_path, actions=["emotion"])
     emotion = result[0]["dominant_emotion"]
     prompt = emotion
