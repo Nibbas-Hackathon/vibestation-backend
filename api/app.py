@@ -10,6 +10,7 @@ import io
 import time
 import random
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask_cors import CORS
 
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
@@ -52,6 +53,7 @@ def combine_audio_files(files_list):
     return file_path
 
 app = Flask(__name__)
+CORS(app)
 
 scheduler = BackgroundScheduler()
 
@@ -116,7 +118,7 @@ def remove_old_files():
         if curr_time - int(file_time) > 1800:
             os.remove("image/" + file)
     
-    files = os.listdir("audio/")
+    files = os.listdir("audio")
     print(files)
     for file in files:
         file_time = file.split("_")[0]
