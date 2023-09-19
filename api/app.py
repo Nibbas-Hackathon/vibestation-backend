@@ -108,6 +108,10 @@ def delete_old_files():
     remove_old_files("image")
     return jsonify("files deleted")
 
+@app.route('/')
+def home():
+    return jsonify("Welcome to Vibestation")
+
 def remove_old_files():
     curr_time = time.time()
     files = os.listdir("image")
