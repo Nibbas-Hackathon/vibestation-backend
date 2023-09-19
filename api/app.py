@@ -11,6 +11,7 @@ import time
 import random
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_cors import CORS
+import boto3
 
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
@@ -24,6 +25,27 @@ def generate_filename(file_type,name=""):
         file_ext = name.split(".")[-1]
         filename = str(current_time) + "_" + str(rand_num) + "." + file_ext
     return filename
+
+def upload_file( file_path):
+    s3 = boto3.client('s3')
+    bucket_name = 'vibestation'
+    object_key = file_path
+
+    try:
+        s3.upload_file(file_path, bucket_name, object_key)
+        print(f"File '{file_path}' uploaded to '{bucket_name}' as '{object_key}'")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+    
+
+    presigned_url = s3.generate_presigned_url(
+        'get_object',
+        Params={'Bucket': bucket_name, 'Key': object_key},
+        ExpiresIn=3600  # Expiration time in seconds (1 hour in this example)
+    )
+
+    return presigned_url
+
 
 def audio_continuation(song_link, count):
     audio_files_links = []
@@ -50,7 +72,8 @@ def combine_audio_files(files_list):
             print(f"Error while processing {link}: {str(e)}")
     file_path = "audio/{}".format(audio_file_name)
     combined_audio.export(file_path, format="wav")
-    return file_path
+    s3_link = upload_file(file_path)
+    return s3_link
 
 app = Flask(__name__)
 CORS(app)
@@ -79,7 +102,7 @@ def fetch_full_song():
     input=params)
     audio_files_links = audio_continuation(song_link, count)
     combined_file_path = combine_audio_files(audio_files_links)
-    return send_file(combined_file_path, as_attachment=False)
+    return jsonify(combined_file_path)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
@@ -100,7 +123,9 @@ def fetch_song_from_emotion():
     input=params)
     audio_files_links = audio_continuation(song_link, 1)
     combined_file_path = combine_audio_files(audio_files_links)
-    return send_file(combined_file_path, as_attachment=False)
+    img_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words]"
+
+    return combined_file_path
 
 @app.route('/api/delete')
 def delete_old_files():
@@ -129,9 +154,9 @@ def remove_old_files():
         if curr_time - int(file_time) > 1800:
             os.remove("audio/" + file)
 
-scheduler.add_job(remove_old_files, 'interval', minutes=2)
+scheduler.add_job(remove_old_files, 'interval', minutes=25)
 
 if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
-    app.run(port=53421)
+    app.run(host='0.0.0.0',port=53421)
