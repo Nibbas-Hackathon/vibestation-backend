@@ -24,24 +24,6 @@ def generate_filename(file_type,name=""):
         filename = str(current_time) + "_" + str(rand_num) + "." + file_ext
     return filename
 
-def remove_old_files(type):
-    curr_time = time.time()
-    if type=="image":
-        files = os.listdir("G:\\vibestation\\vibestation-backend\\app\img")
-        print(files)
-
-        for file in files:
-            file_time = file.split("_")[0]
-            if curr_time - int(file_time) > 1800:
-                os.remove("G:\\vibestation\\vibestation-backend\\app\img\\" + file)
-    elif type=="audio":
-        files = os.listdir("G:\\vibestation\\vibestation-backend\\app\\audio")
-        print(files)
-        for file in files:
-            file_time = file.split("_")[0]
-            if curr_time - int(file_time) > 1800:
-                os.remove("G:\\vibestation\\vibestation-backend\\app\\audio\\" + file)
-
 def audio_continuation(song_link, count):
     audio_files_links = []
     audio_files_links.append(song_link)
@@ -65,7 +47,7 @@ def combine_audio_files(files_list):
                 print(f"Failed to download {link}. Status code: {response.status_code}")
         except Exception as e:
             print(f"Error while processing {link}: {str(e)}")
-    file_path = "G:\\vibestation\\vibestation-backend\\app\\audio\{}".format(audio_file_name)
+    file_path = "./api/audio{}".format(audio_file_name)
     combined_audio.export(file_path, format="wav")
     return file_path
 
@@ -102,7 +84,7 @@ def fetch_song_from_emotion():
     uploaded_img = request.files['uploaded-img']
     img_filename = secure_filename(uploaded_img.filename)
     img_filename = generate_filename("image",img_filename)
-    img_path = "G:\\vibestation\\vibestation-backend\\app\img\{}".format(img_filename)
+    img_path = "./api/image{}".format(img_filename)
     uploaded_img.save(img_path)
     result = DeepFace.analyze(img_path, actions=["emotion"])
     args = request.args
@@ -126,20 +108,20 @@ def delete_old_files():
 
 def remove_old_files():
     curr_time = time.time()
-    files = os.listdir("G:\\vibestation\\vibestation-backend\\app\img")
+    files = os.listdir("./api/image")
     print(files)
 
     for file in files:
         file_time = file.split("_")[0]
         if curr_time - int(file_time) > 1800:
-            os.remove("G:\\vibestation\\vibestation-backend\\app\img\\" + file)
+            os.remove("./api/image/" + file)
     
-    files = os.listdir("G:\\vibestation\\vibestation-backend\\app\\audio")
+    files = os.listdir("./api/audio/")
     print(files)
     for file in files:
         file_time = file.split("_")[0]
         if curr_time - int(file_time) > 1800:
-            os.remove("G:\\vibestation\\vibestation-backend\\app\\audio\\" + file)
+            os.remove("./api/audio/" + file)
 
 scheduler.add_job(remove_old_files, 'interval', minutes=2)
 
