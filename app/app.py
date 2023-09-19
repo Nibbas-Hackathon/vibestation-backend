@@ -146,4 +146,4 @@ scheduler.add_job(remove_old_files, 'interval', minutes=2)
 if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
-    app.run()
+    app.run(port=53421)
