@@ -47,7 +47,7 @@ def combine_audio_files(files_list):
                 print(f"Failed to download {link}. Status code: {response.status_code}")
         except Exception as e:
             print(f"Error while processing {link}: {str(e)}")
-    file_path = "./api/audio{}".format(audio_file_name)
+    file_path = "audio/{}".format(audio_file_name)
     combined_audio.export(file_path, format="wav")
     return file_path
 
@@ -108,20 +108,20 @@ def delete_old_files():
 
 def remove_old_files():
     curr_time = time.time()
-    files = os.listdir("./api/image")
+    files = os.listdir("image")
     print(files)
 
     for file in files:
         file_time = file.split("_")[0]
         if curr_time - int(file_time) > 1800:
-            os.remove("./api/image/" + file)
+            os.remove("image/" + file)
     
-    files = os.listdir("./api/audio/")
+    files = os.listdir("audio/")
     print(files)
     for file in files:
         file_time = file.split("_")[0]
         if curr_time - int(file_time) > 1800:
-            os.remove("./api/audio/" + file)
+            os.remove("audio/" + file)
 
 scheduler.add_job(remove_old_files, 'interval', minutes=2)
 
