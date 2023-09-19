@@ -109,7 +109,7 @@ def fetch_song_from_emotion():
     uploaded_img = request.files['uploaded-img']
     img_filename = secure_filename(uploaded_img.filename)
     img_filename = generate_filename("image",img_filename)
-    img_path = "./api/image{}".format(img_filename)
+    img_path = "image/{}".format(img_filename)
     uploaded_img.save(img_path)
     result = DeepFace.analyze(img_path, actions=["emotion"])
     args = request.args
@@ -124,8 +124,9 @@ def fetch_song_from_emotion():
     audio_files_links = audio_continuation(song_link, 1)
     combined_file_path = combine_audio_files(audio_files_links)
     img_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words]"
+    #Add GPT
 
-    return combined_file_path
+    return jsonify(combined_file_path)
 
 @app.route('/api/delete')
 def delete_old_files():
