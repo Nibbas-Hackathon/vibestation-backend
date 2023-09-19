@@ -12,6 +12,10 @@ import random
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask_cors import CORS
 import boto3
+import openai
+
+openai.api_key = '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'
+system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words]"
 
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
@@ -102,7 +106,23 @@ def fetch_full_song():
     input=params)
     audio_files_links = audio_continuation(song_link, count)
     combined_file_path = combine_audio_files(audio_files_links)
-    return jsonify(combined_file_path)
+    chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+      {
+        "role": "system",
+        "content": system_prompt
+      },
+      {
+        "role": "user",
+        "content": prompt
+      }
+    ]);
+    print(chat_completion["choices"][0]["message"]["content"])
+    output = replicate.run(
+    "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
+    input={"prompt": chat_completion["choices"][0]["message"]["content"]},
+    )
+    # return jsonify(chat_completion,output)
+    return jsonify(combined_file_path,output)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
@@ -123,10 +143,23 @@ def fetch_song_from_emotion():
     input=params)
     audio_files_links = audio_continuation(song_link, 1)
     combined_file_path = combine_audio_files(audio_files_links)
-    img_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words]"
-    #Add GPT
-
-    return jsonify(combined_file_path)
+    chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+      {
+        "role": "system",
+        "content": system_prompt
+      },
+      {
+        "role": "user",
+        "content": prompt
+      }
+    ]);
+    print(chat_completion["choices"][0]["message"]["content"])
+    output = replicate.run(
+    "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
+    input={"prompt": chat_completion["choices"][0]["message"]["content"]},
+    )
+    # return jsonify(chat_completion,output)
+    return jsonify(combined_file_path,output)
 
 @app.route('/api/delete')
 def delete_old_files():
