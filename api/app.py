@@ -122,8 +122,8 @@ def fetch_full_song():
     input={"prompt": chat_completion["choices"][0]["message"]["content"]},
     )
     # return jsonify(chat_completion,output)
-    
-    return jsonify(combined_file_path,output)
+    response_obj = {"songUrl": combined_file_path, "coverUrl": output[0]}
+    return jsonify(response_obj)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
@@ -160,7 +160,8 @@ def fetch_song_from_emotion():
     input={"prompt": chat_completion["choices"][0]["message"]["content"]},
     )
     # return jsonify(chat_completion,output)
-    return jsonify(combined_file_path,output)
+    response_obj = {"songUrl": combined_file_path, "coverUrl": output[0]}
+    return jsonify(response_obj)
 
 @app.route('/api/delete')
 def delete_old_files():
