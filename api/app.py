@@ -122,6 +122,7 @@ def fetch_full_song():
     input={"prompt": chat_completion["choices"][0]["message"]["content"]},
     )
     # return jsonify(chat_completion,output)
+    
     return jsonify(combined_file_path,output)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
@@ -169,7 +170,8 @@ def delete_old_files():
 
 @app.route('/')
 def home():
-    return jsonify("Welcome to Vibestation")
+    obj = {"songUrl": "songlinkdsjnkjd", "coverUrl": "coverliaindjnk"}
+    return jsonify(obj)
 
 def remove_old_files():
     curr_time = time.time()
