@@ -86,9 +86,10 @@ CORS(app)
 scheduler = BackgroundScheduler()
 cert_file = '/home/ec2-user/certs/vibestation.crt'
 key_file = '/home/ec2-user/certs/vibestation.key'
+paraphrase = '17Creta28'
 
 context = SSL.Context(SSL.SSLv23_METHOD)
-context.use_privatekey_file(key_file)
+context.use_privatekey_file(key_file, paraphrase)
 context.use_certificate_file(cert_file)
 
 @app.route('/api/data/query')
@@ -195,4 +196,4 @@ scheduler.add_job(remove_old_files, 'interval', minutes=25)
 if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
-    app.run(host='0.0.0.0',port=53421, ssl_context=context, password="17Creta28")
+    app.run(host='0.0.0.0',port=53421, ssl_context=context)
