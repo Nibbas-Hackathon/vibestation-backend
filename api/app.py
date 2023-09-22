@@ -29,7 +29,7 @@ def generate_filename(file_type, name=""):
     if file_type == "audio":
         filename = str(current_time) + "_" + str(rand_num) + ".wav"
     elif file_type == "image":
-        file_ext = name.split('.')[1]
+        file_ext = name.split('.')[-1]
         filename = str(current_time) + "_" + str(rand_num) + "." + file_ext
     return filename
 
@@ -139,12 +139,13 @@ def fetch_full_song():
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
     uploaded_img = request.files['uploaded-img']
+    print(uploaded_img)
     img_filename = secure_filename(uploaded_img.filename)
     img_filename = generate_filename("image",img_filename)
     img_path = "image/{}".format(img_filename)
     uploaded_img.save(img_path)
     result = DeepFace.analyze(img_path, actions=["emotion"])
-    args = request.args
+    args = request.form
     args = args.to_dict()
     emotion = result[0]["dominant_emotion"]
     prompt = "Generate a piece of music that conveys the emotion of {}, with a {} mood, {} tempo, in the {} genre".format(emotion, args['mood'], args['tempo'], args['genre'])
