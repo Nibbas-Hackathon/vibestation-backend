@@ -131,7 +131,7 @@ def fetch_song_from_emotion():
     image_data = base64.b64decode(uploaded_img_base_64)
     print(image_data)
     img_filename = generate_filename("image")
-    img_path = "image/{}".format(img_filename)
+    img_path = "/home/ec2-user/vibestation-backend/api/image/{}".format(img_filename)
     img_file = open(img_path,'wb')
     img_file.write(image_data)
     img_file.close()
