@@ -28,8 +28,7 @@ def generate_filename(file_type,name=""):
     if file_type == "audio":
         filename = str(current_time) + "_" + str(rand_num) + ".wav"
     elif file_type == "image":
-        file_ext = name.split(".")[-1]
-        filename = str(current_time) + "_" + str(rand_num) + "." + file_ext
+        filename = str(current_time) + "_" + str(rand_num) + ".jpeg"
     return filename
 
 def upload_file( file_path):
@@ -129,7 +128,7 @@ def fetch_full_song():
 def fetch_song_from_emotion():
     uploaded_img_base_64 = request.args['uploaded-img']
     image_data = base64.b64decode(uploaded_img_base_64)
-    img_filename = generate_filename("image",img_filename)
+    img_filename = generate_filename("image")
     img_path = "image/{}".format(img_filename)
     with open(img_path) as file:
         file.write(image_data)
