@@ -87,10 +87,6 @@ scheduler = BackgroundScheduler()
 cert_file = '/home/ec2-user/certs/vibestation.cert'
 key_file = '/home/ec2-user/certs/vibestation.key'
 
-context = SSL.Context(SSL.SSLv23_METHOD)
-context.use_privatekey_file(key_file)
-context.use_certificate_file(cert_file)
-
 @app.route('/api/data/query')
 def fetch_song():
     prompt = request.args.get('prompt')
@@ -195,4 +191,5 @@ scheduler.add_job(remove_old_files, 'interval', minutes=25)
 if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
+    context = (cert_file, key_file)
     app.run(host='0.0.0.0',port=53421, ssl_context=context)
