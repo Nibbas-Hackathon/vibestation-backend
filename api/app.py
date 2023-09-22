@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from flask_cors import CORS
 import boto3
 import openai
+from OpenSSL import SSL 
 
 openai.api_key = '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'
 system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words] prompt:"
@@ -83,6 +84,12 @@ app = Flask(__name__)
 CORS(app)
 
 scheduler = BackgroundScheduler()
+cert_file = '/home/ec2-user/certs/vibestation.crt'
+key_file = '/home/ec2-user/certs/vibestation.key'
+
+context = SSL.Context(SSL.SSLv23_METHOD)
+context.use_privatekey_file(key_file)
+context.use_certificate_file(cert_file)
 
 @app.route('/api/data/query')
 def fetch_song():
@@ -188,4 +195,4 @@ scheduler.add_job(remove_old_files, 'interval', minutes=25)
 if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
-    app.run(host='0.0.0.0',port=53421)
+    app.run(host='0.0.0.0',port=53421, ssl_context=context)
