@@ -15,6 +15,7 @@ import boto3
 import openai
 from OpenSSL import SSL
 import base64
+from PIL import Image
 
 openai.api_key = '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'
 system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words] prompt:"
@@ -129,9 +130,9 @@ def fetch_song_from_emotion():
     uploaded_img_base_64 = request.args['uploaded-img']
     image_data = base64.b64decode(uploaded_img_base_64)
     img_filename = generate_filename("image")
+    image = Image.open(io.BytesIO(image_data))
     img_path = "image/{}".format(img_filename)
-    with open(img_path, "wb") as file:
-        file.write(image_data)
+    image.save(img_path, "JPEG")
     result = DeepFace.analyze(img_path, actions=["emotion"])
     args = request.args
     args = args.to_dict()
