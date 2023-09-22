@@ -16,6 +16,8 @@ import openai
 from OpenSSL import SSL
 import base64
 from PIL import Image
+import cv2
+import numpy as np
 
 openai.api_key = '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'
 system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words] prompt:"
@@ -23,7 +25,12 @@ system_prompt = "Given a music prompt describing the mood, theme, and style of a
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
 
-def generate_filename(file_type,name=""):
+def save(encoded_data, filename):
+    nparr = np.fromstring(encoded_data.decode('base64'), np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_ANYCOLOR)
+    cv2.imwrite(filename, img)
+
+def generate_filename(file_type):
     current_time = int(time.time())
     rand_num = random.randint(1000,9999)
     if file_type == "audio":
@@ -128,13 +135,8 @@ def fetch_full_song():
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
     uploaded_img_base_64 = request.args['uploaded-img']
-    image_data = base64.b64decode(uploaded_img_base_64)
-    print(image_data)
     img_filename = generate_filename("image")
-    img_path = "/home/ec2-user/vibestation-backend/api/image/{}".format(img_filename)
-    img_file = open(img_path,'wb')
-    img_file.write(image_data)
-    img_file.close()
+    save(uploaded_img_base_64,img_filename)
     result = DeepFace.analyze(img_path, actions=["emotion"])
     args = request.args
     args = args.to_dict()
