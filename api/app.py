@@ -84,7 +84,7 @@ app = Flask(__name__)
 CORS(app)
 
 scheduler = BackgroundScheduler()
-cert_file = '/home/ec2-user/certs/vibestation.crt'
+cert_file = '/home/ec2-user/certs/vibestation.cert'
 key_file = '/home/ec2-user/certs/vibestation.key'
 
 context = SSL.Context(SSL.SSLv23_METHOD)
