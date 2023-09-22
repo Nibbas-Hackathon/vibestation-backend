@@ -86,10 +86,9 @@ CORS(app)
 scheduler = BackgroundScheduler()
 cert_file = '/home/ec2-user/certs/vibestation.crt'
 key_file = '/home/ec2-user/certs/vibestation.key'
-paraphrase = '17Creta28'
 
 context = SSL.Context(SSL.SSLv23_METHOD)
-context.use_privatekey_file(key_file, paraphrase)
+context.use_privatekey_file(key_file)
 context.use_certificate_file(cert_file)
 
 @app.route('/api/data/query')
