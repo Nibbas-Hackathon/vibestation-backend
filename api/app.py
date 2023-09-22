@@ -129,10 +129,12 @@ def fetch_full_song():
 def fetch_song_from_emotion():
     uploaded_img_base_64 = request.args['uploaded-img']
     image_data = base64.b64decode(uploaded_img_base_64)
+    print(image_data)
     img_filename = generate_filename("image")
-    image = Image.open(io.BytesIO(image_data))
     img_path = "image/{}".format(img_filename)
-    image.save(img_path, "JPEG")
+    img_file = open(img_path,'wb')
+    img_file.write(image_data)
+    img_file.close()
     result = DeepFace.analyze(img_path, actions=["emotion"])
     args = request.args
     args = args.to_dict()
