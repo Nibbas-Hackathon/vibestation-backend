@@ -206,4 +206,4 @@ if __name__ == '__main__':
     print(os.getcwd())
     scheduler.start()
     context = (cert_file, key_file)
-    app.run(host='0.0.0.0',port=53421, ssl_context=context)
+    app.run()
