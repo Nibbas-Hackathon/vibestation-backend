@@ -144,7 +144,7 @@ def fetch_song_from_emotion():
     img_filename = generate_filename("image",img_filename)
     img_path = "image/{}".format(img_filename)
     uploaded_img.save(img_path)
-    result = DeepFace.analyze(img_path, actions=["emotion"])
+    result = DeepFace.analyze(img_path, actions=["emotion"], enforce_detection=False)
     args = request.form
     args = args.to_dict()
     emotion = result[0]["dominant_emotion"]
