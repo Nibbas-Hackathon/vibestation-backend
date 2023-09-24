@@ -57,7 +57,7 @@ def upload_file( file_path):
     presigned_url = s3.generate_presigned_url(
         'get_object',
         Params={'Bucket': bucket_name, 'Key': object_key},
-        ExpiresIn=2592000
+        ExpiresIn=604000
     )
 
     return presigned_url
