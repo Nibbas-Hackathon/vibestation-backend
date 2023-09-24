@@ -133,7 +133,7 @@ def fetch_full_song():
         )
         response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
         mongo_db = client["REQUESTS"]
-        mongo_collection = mongo_db["image_requests"]
+        mongo_collection = mongo_db["song_requests"]
         mongo_collection.insert_one(response_obj)
         return jsonify(response_obj)
     except Exception as e:
