@@ -188,7 +188,8 @@ def fetch_all_songs():
     try:
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        query_data = mongo_collection.find({})
+        query_data = mongo_collection.find({}, {"_id":0})
+        query_data = list(query_data)
         return jsonify(query_data)
     except Exception as e:
         response_obj = {"error": str(e)}
@@ -199,7 +200,7 @@ def fetch_random_song():
     try:
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        query_data = mongo_collection.aggregate({"$sample": {"size": 1}})
+        query_data = mongo_collection.aggregate([{"$sample": {"size": 1}}])
         return jsonify(query_data)
     except Exception as e:
         response_obj = {"error": str(e)}
