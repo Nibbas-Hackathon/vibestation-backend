@@ -14,11 +14,20 @@ from flask_cors import CORS
 import boto3
 import openai
 from OpenSSL import SSL
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 
 
 openai.api_key = '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'
 system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words] prompt:"
 music_system_prompt = "enhance this prompt for a music generation AI model [in 25 words] prompt:"
+
+
+
+
+uri = "mongodb+srv://admin:17Creta28@vibestation.dh2puki.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(uri, server_api=ServerApi('1'))
+
 
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
@@ -48,7 +57,7 @@ def upload_file( file_path):
     presigned_url = s3.generate_presigned_url(
         'get_object',
         Params={'Bucket': bucket_name, 'Key': object_key},
-        ExpiresIn=3600  # Expiration time in seconds (1 hour in this example)
+        ExpiresIn=2592000
     )
 
     return presigned_url
@@ -89,88 +98,90 @@ scheduler = BackgroundScheduler()
 cert_file = '/home/ec2-user/certs/vibestation.cert'
 key_file = '/home/ec2-user/certs/vibestation.key'
 
-@app.route('/api/data/query')
-def fetch_song():
-    prompt = request.args.get('prompt')
-    #gpt prompt
-    params = {"model_version": "melody", "prompt": prompt, "duration": 30}
-    output = replicate.run(
-    "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-    input=params)
-    print(output)
-    return output
-
 @app.route('/api/data/song')
 def fetch_full_song():
-    count = 1
-    prompt = request.args.get('prompt')
-    prompt_arr = prompt.split()
-    if len(prompt_arr) <= 3:
-        music_chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+    try:
+        count = 1
+        prompt = request.args.get('prompt')
+        prompt_arr = prompt.split()
+        if len(prompt_arr) <= 3:
+            music_chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+            {
+                "role": "user",
+                "content": music_system_prompt+prompt
+            }
+            ]);
+            params = {"model_version": "melody", "prompt": music_chat_completion["choices"][0]["message"]["content"], "duration": 10}
+        else:
+            params = {"model_version": "melody", "prompt": prompt, "duration": 10}
+        audio_files_links = []
+        song_link = replicate.run(
+        "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+        input=params)
+        audio_files_links = audio_continuation(song_link, count)
+        combined_file_path = combine_audio_files(audio_files_links)
+        chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
         {
             "role": "user",
-            "content": music_system_prompt+prompt
+            "content": system_prompt+prompt
         }
         ]);
-        params = {"model_version": "melody", "prompt": music_chat_completion["choices"][0]["message"]["content"], "duration": 10}
-    else:
-        params = {"model_version": "melody", "prompt": prompt, "duration": 10}
-    audio_files_links = []
-    song_link = replicate.run(
-    "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-    input=params)
-    audio_files_links = audio_continuation(song_link, count)
-    combined_file_path = combine_audio_files(audio_files_links)
-    chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
-      {
-        "role": "user",
-        "content": system_prompt+prompt
-      }
-    ]);
-    print(chat_completion["choices"][0]["message"]["content"])
-    output = replicate.run(
-    "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
-    input={"prompt": chat_completion["choices"][0]["message"]["content"]},
-    )
-    response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
-    print(response_obj)
-    return jsonify(response_obj)
+        print(chat_completion["choices"][0]["message"]["content"])
+        output = replicate.run(
+        "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
+        input={"prompt": chat_completion["choices"][0]["message"]["content"]},
+        )
+        response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
+        mongo_db = client["REQUESTS"]
+        mongo_collection = mongo_db["image_requests"]
+        mongo_collection.insert_one(response_obj)
+        return jsonify(response_obj)
+    except Exception as e:
+        response_obj = {"error": e}
+        return jsonify(response_obj)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
 def fetch_song_from_emotion():
-    uploaded_img = request.files['uploaded-img']
-    print(uploaded_img)
-    img_filename = secure_filename(uploaded_img.filename)
-    img_filename = generate_filename("image",img_filename)
-    img_path = "image/{}".format(img_filename)
-    uploaded_img.save(img_path)
-    result = DeepFace.analyze(img_path, actions=["emotion"], enforce_detection=False)
-    args = request.form
-    args = args.to_dict()
-    emotion = result[0]["dominant_emotion"]
-    prompt = "Generate a piece of music that conveys the emotion of {}, with a {} mood, {} tempo, in the {} genre".format(emotion, args['mood'], args['tempo'], args['genre'])
-    params = {"model_version": "melody", "prompt": prompt, "duration": 10}
-    audio_files_links = []
-    song_link = replicate.run(
-    "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
-    input=params)
-    audio_files_links = audio_continuation(song_link, 1)
-    combined_file_path = combine_audio_files(audio_files_links)
-    chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
-      {
-        "role": "user",
-        "content": system_prompt+prompt
-      }
-    ]);
-    print(chat_completion["choices"][0]["message"]["content"])
-    output = replicate.run(
-    "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
-    input={"prompt": chat_completion["choices"][0]["message"]["content"]},
-    )
-    # return jsonify(chat_completion,output)
-    response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
-    print(response_obj)
-    return jsonify(response_obj)
+    try:
+        uploaded_img = request.files['uploaded-img']
+        print(uploaded_img)
+        img_filename = secure_filename(uploaded_img.filename)
+        img_filename = generate_filename("image",img_filename)
+        img_path = "image/{}".format(img_filename)
+        uploaded_img.save(img_path)
+        result = DeepFace.analyze(img_path, actions=["emotion"], enforce_detection=False)
+        args = request.form
+        args = args.to_dict()
+        emotion = result[0]["dominant_emotion"]
+        prompt = "Generate a piece of music that conveys the emotion of {}, with a {} mood, {} tempo, in the {} genre".format(emotion, args['mood'], args['tempo'], args['genre'])
+        params = {"model_version": "melody", "prompt": prompt, "duration": 10}
+        audio_files_links = []
+        song_link = replicate.run(
+        "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
+        input=params)
+        audio_files_links = audio_continuation(song_link, 1)
+        combined_file_path = combine_audio_files(audio_files_links)
+        chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
+        {
+            "role": "user",
+            "content": system_prompt+prompt
+        }
+        ]);
+        print(chat_completion["choices"][0]["message"]["content"])
+        output = replicate.run(
+        "stability-ai/sdxl:2b017d9b67edd2ee1401238df49d75da53c523f36e363881e057f5dc3ed3c5b2",
+        input={"prompt": chat_completion["choices"][0]["message"]["content"]},
+        )
+        # return jsonify(chat_completion,output)
+        response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
+        mongo_db = client["REQUESTS"]
+        mongo_collection = mongo_db["image_requests"]
+        mongo_collection.insert_one(response_obj)
+        return jsonify(response_obj)
+    except Exception as e:
+        response_obj = {"error": e}
+        return jsonify(response_obj)
+
 
 @app.route('/api/delete')
 def delete_old_files():
