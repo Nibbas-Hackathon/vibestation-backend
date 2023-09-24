@@ -201,9 +201,9 @@ def fetch_random_song():
     try:
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        query_data = mongo_collection.aggregate([{"$sample": {"size": 1}}])
-        query_data = list(query_data)
-        response_obj = {"ranndom_song": query_data}
+        pipeline = [{"$sample": {"size": 1}}]
+        query_data = list(mongo_collection.aggregate(pipeline))
+        response_obj = {"random_song": query_data}
         return jsonify(response_obj)
     except Exception as e:
         response_obj = {"error": str(e)}
