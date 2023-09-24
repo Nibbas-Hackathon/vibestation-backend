@@ -134,10 +134,10 @@ def fetch_full_song():
         response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        mongo_collection.insert_one(response_obj)
+        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]})
         return jsonify(response_obj)
     except Exception as e:
-        response_obj = {"error": e}
+        response_obj = {"error": str(e)}
         return jsonify(response_obj)
 
 @app.route('/api/data/detect_emotion', methods=("POST", "GET"))
@@ -176,10 +176,11 @@ def fetch_song_from_emotion():
         response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["image_requests"]
-        mongo_collection.insert_one(response_obj)
+        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]})
         return jsonify(response_obj)
     except Exception as e:
-        response_obj = {"error": e}
+
+        response_obj = {"error": str(e)}
         return jsonify(response_obj)
 
 
