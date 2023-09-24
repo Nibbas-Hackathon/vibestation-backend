@@ -201,7 +201,7 @@ def fetch_random_song():
     try:
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        pipeline = [{"$sample": {"size": 1}}]
+        pipeline = [{"$sample": {"size": 1}},{"$project": {"_id": 0}}]
         query_data = list(mongo_collection.aggregate(pipeline))
         response_obj = {"random_song": query_data}
         return jsonify(response_obj)
