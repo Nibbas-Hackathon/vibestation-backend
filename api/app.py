@@ -16,6 +16,7 @@ import openai
 from OpenSSL import SSL
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+from datetime import datetime, timedelta
 
 
 openai.api_key = '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'
@@ -134,7 +135,7 @@ def fetch_full_song():
         response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]})
+        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"], "created_at":datetime.utcnow()})
         return jsonify(response_obj)
     except Exception as e:
         response_obj = {"error": str(e)}
@@ -175,8 +176,8 @@ def fetch_song_from_emotion():
         # return jsonify(chat_completion,output)
         response_obj = {"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]}
         mongo_db = client["REQUESTS"]
-        mongo_collection = mongo_db["image_requests"]
-        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"]})
+        mongo_collection = mongo_db["song_requests"]
+        mongo_collection.insert_one({"songUrl": combined_file_path, "coverUrl": output[0], "title": prompt, "img_prompt": chat_completion["choices"][0]["message"]["content"], "created_at":datetime.utcnow()})
         return jsonify(response_obj)
     except Exception as e:
 
