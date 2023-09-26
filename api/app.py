@@ -19,19 +19,16 @@ from pymongo.server_api import ServerApi
 from datetime import datetime, timedelta
 
 
-openai.api_key = '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'
 system_prompt = "Given a music prompt describing the mood, theme, and style of a song or album, generate an image prompt that represents the album cover for this music. The image should capture the essence of the music, its emotions, and the overall vibe it conveys. Be creative and imaginative in your image prompt generation.[prompt should be only in 25 words] prompt:"
 music_system_prompt = "enhance this prompt for a music generation AI model [in 25 words] prompt:"
 
 
-
-
-uri = "mongodb+srv://admin:17Creta28@vibestation.dh2puki.mongodb.net/?retryWrites=true&w=majority"
-client = MongoClient(uri, server_api=ServerApi('1'))
-
-
 load_dotenv()
 REPLICATE_API_TOKEN = os.getenv('REPLICATE_API_TOKEN')
+uri = os.getenv('MONGO_URL')
+openai.api_key = os.getenv('OPENAI_KEY')
+client = MongoClient(uri, server_api=ServerApi('1'))
+
 
 def generate_filename(file_type, name=""):
     current_time = int(time.time())
