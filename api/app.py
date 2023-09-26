@@ -112,14 +112,15 @@ def fetch_full_song():
                 "content": music_system_prompt+prompt
             }
             ]);
-            params = {"model_version": "melody", "prompt": music_chat_completion["choices"][0]["message"]["content"], "duration": 10}
+            params = {"model_version": "melody", "prompt": music_chat_completion["choices"][0]["message"]["content"], "duration": 30}
         else:
-            params = {"model_version": "melody", "prompt": prompt, "duration": 10}
+            params = {"model_version": "melody", "prompt": prompt, "duration": 30}
         audio_files_links = []
         song_link = replicate.run(
         "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
         input=params)
-        audio_files_links = audio_continuation(song_link, count)
+        # audio_files_links = audio_continuation(song_link, count)
+        audio_files_links.append(song_link)
         combined_file_path = combine_audio_files(audio_files_links)
         chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
         {
@@ -155,12 +156,13 @@ def fetch_song_from_emotion():
         args = args.to_dict()
         emotion = result[0]["dominant_emotion"]
         prompt = "Generate a piece of music that conveys the emotion of {}, with a {} mood, {} tempo, in the {} genre".format(emotion, args['mood'], args['tempo'], args['genre'])
-        params = {"model_version": "melody", "prompt": prompt, "duration": 10}
+        params = {"model_version": "melody", "prompt": prompt, "duration": 30}
         audio_files_links = []
         song_link = replicate.run(
         "meta/musicgen:7a76a8258b23fae65c5a22debb8841d1d7e816b75c2f24218cd2bd8573787906",
         input=params)
-        audio_files_links = audio_continuation(song_link, 1)
+        # audio_files_links = audio_continuation(song_link, 1)
+        audio_files_links.append(song_link)
         combined_file_path = combine_audio_files(audio_files_links)
         chat_completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[
         {
