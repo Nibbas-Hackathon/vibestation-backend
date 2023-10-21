@@ -55,7 +55,7 @@ def upload_file( file_path):
     presigned_url = s3.generate_presigned_url(
         'get_object',
         Params={'Bucket': bucket_name, 'Key': object_key},
-        ExpiresIn=604000
+        ExpiresIn=604800
     )
 
     return presigned_url
@@ -92,9 +92,9 @@ def combine_audio_files(files_list):
 app = Flask(__name__)
 CORS(app)
 
-scheduler = BackgroundScheduler()
-cert_file = '/home/ec2-user/certs/vibestation.cert'
-key_file = '/home/ec2-user/certs/vibestation.key'
+# scheduler = BackgroundScheduler()
+# cert_file = '/home/ec2-user/certs/vibestation.cert'
+# key_file = '/home/ec2-user/certs/vibestation.key'
 
 @app.route('/api/data/song')
 def fetch_full_song():
@@ -188,7 +188,9 @@ def fetch_all_songs():
     try:
         mongo_db = client["REQUESTS"]
         mongo_collection = mongo_db["song_requests"]
-        query_data = mongo_collection.find({}, {"_id":0})
+        one_week_ago = datetime.utcnow() - timedelta(days=7)
+        query = {"created_at": {"$gte": one_week_ago, "$lt": datetime.utcnow()}}
+        query_data = mongo_collection.find(query, {"_id":0})
         query_data = list(query_data)
         response_obj = {"all_songs": query_data}
         return jsonify(response_obj)
@@ -242,6 +244,6 @@ scheduler.add_job(remove_old_files, 'interval', minutes=25)
 
 if __name__ == '__main__':
     print(os.getcwd())
-    scheduler.start()
-    context = (cert_file, key_file)
+    #scheduler.start()
+    #context = (cert_file, key_file)
     app.run()
